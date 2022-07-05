@@ -7,11 +7,13 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.import_character_assets()
         self.frame_index = 0
-        self.animation_speed = 0.15
+        self.animation_speed = 0.10
+        # start with the idle animation folder and start at frame 0
         self.image = self.animations['idle'][self.frame_index]
         self.rect = self.image.get_rect(topleft=pos)
 
         # dust particles
+        # dust particles are going to be apart of the screen not the player
         self.import_dust_run_particles()
         self.dust_frame_index = 0
         self.dust_animation_speed = 0.15
@@ -21,17 +23,21 @@ class Player(pygame.sprite.Sprite):
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
         self.speed = 8
+        # pushes player down 0.8 but the vertical collision pushes player back up to 0 constantly
         self.gravity = 0.8
-        self.jump_speed = -16
+        self.jump_speed = -15
+        self.double_jump = 0
 
         # player status
         self.status = 'idle'
-        self.facing_right = True
+        self.facing_right = True  # false if facing_left
+        # check all the player collisions
         self.on_ground = False
         self.on_ceiling = False
         self.on_left = False
         self.on_right = False
 
+    # gets the file path to the folder containing all the png frames of one action
     def import_character_assets(self):
         character_path = './graphics/character/'
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': []}
@@ -54,20 +60,24 @@ class Player(pygame.sprite.Sprite):
 
         image = animation[int(self.frame_index)]
         if self.facing_right:
-            self.image = image
+            self.image = image  # if facing right then default right image
         else:
-            flipped_image = pygame.transform.flip(image, True, False)
+            flipped_image = pygame.transform.flip(
+                image, True, False)  # flip the image to the left
             self.image = flipped_image
 
-        # set the rect
-        if self.on_ground and self.on_right:
+        # set the rectangle for collisions for every direction
+        if self.on_ground and self.on_right:  # if player is touching ground AND touching something on the right side
+            # set bottomright of player to bottomright
             self.rect = self.image.get_rect(bottomright=self.rect.bottomright)
         elif self.on_ground and self.on_left:
             self.rect = self.image.get_rect(bottomleft=self.rect.bottomleft)
         elif self.on_ground:
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
-        elif self.on_ceiling and self.on_right:
-            self.rect = self.image.get_rect(topright=self.rect.topright)
+
+        elif self.on_ceiling and self.on_right:  # if player touching ceiling and touching something on right side
+            self.rect = self.image.get_rect(
+                topright=self.rect.topright)  # set player to topright
         elif self.on_ceiling and self.on_left:
             self.rect = self.image.get_rect(topleft=self.rect.topleft)
         elif self.on_ceiling:
@@ -109,7 +119,7 @@ class Player(pygame.sprite.Sprite):
     def get_status(self):
         if self.direction.y < 0:
             self.status = 'jump'
-        elif self.direction.y > 1:
+        elif self.direction.y > 1:  # greater than 1 because of our gravity at 0.8
             self.status = 'fall'
         else:
             if self.direction.x != 0:

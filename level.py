@@ -154,16 +154,17 @@ class Level:
         player.rect.x += player.direction.x * player.speed
         collidable_sprites = self.terrain_sprites.sprites(
         ) + self.crate_sprites.sprites() + self.fg_palm_sprites.sprites()
+
         for sprite in collidable_sprites:
             if sprite.rect.colliderect(player.rect):
-                if player.direction.x < 0:
+                if player.direction.x < 0:  # if player moving left
                     player.rect.left = sprite.rect.right
-                    player.on_left = True
-                    self.current_x = player.rect.left
-                elif player.direction.x > 0:
+                    player.on_left = True  # collision on left
+                    self.current_x = player.rect.left  # check the collision point
+                elif player.direction.x > 0:  # if player moving right
                     player.rect.right = sprite.rect.left
-                    player.on_right = True
-                    self.current_x = player.rect.right
+                    player.on_right = True  # collision on right
+                    self.current_x = player.rect.right  # check the collision point
 
         if player.on_left and (player.rect.left < self.current_x or player.direction.x >= 0):
             player.on_left = False
@@ -178,19 +179,20 @@ class Level:
 
         for sprite in collidable_sprites:
             if sprite.rect.colliderect(player.rect):
-                if player.direction.y > 0:
+                if player.direction.y > 0:  # if true player is on ground
                     player.rect.bottom = sprite.rect.top
                     player.direction.y = 0
                     player.on_ground = True
-                elif player.direction.y < 0:
+                elif player.direction.y < 0:  # if true player is on ceiling
                     player.rect.top = sprite.rect.bottom
                     player.direction.y = 0
                     player.on_ceiling = True
 
+        # if player is on ground AND player is jumping OR player is falling. if player is in the air
         if player.on_ground and player.direction.y < 0 or player.direction.y > 1:
-            player.on_ground = False
-        if player.on_ceiling and player.direction.y > 0.1:
-            player.on_ceiling = False
+            player.on_ground = False  # then player is no longer on the ground
+        if player.on_ceiling and player.direction.y > 0.1:  # if player is on ceiling AND player starts falling
+            player.on_ceiling = False  # then player is not on ceiling
 
     def scroll_x(self):
         player = self.player.sprite

@@ -7,6 +7,8 @@ import pygame
 def import_folder(path):
     surface_list = []
 
+    # the _ and __ means you don't care whats being returned
+    # image_files are all the png pictures
     for _, __, image_files in walk(path):
         for image in image_files:
             full_path = path + '/' + image
@@ -18,9 +20,11 @@ def import_folder(path):
 
 def import_csv_layout(path):
     terrain_map = []
-    with open(path) as map:
+    with open(path) as map:  # storing all csv into map
+        # csv data, delimiter(what you are using to separate data(which is a comma))
         level = reader(map, delimiter=',')
         for row in level:
+            # convert row to a list then append to terrain_map
             terrain_map.append(list(row))
         return terrain_map
 

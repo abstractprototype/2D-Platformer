@@ -19,7 +19,7 @@ class ParticleEffect(pygame.sprite.Sprite):
     def animate(self):
         self.frame_index += self.animation_speed
         if self.frame_index >= len(self.frames):
-            self.kill()
+            self.kill()  # destroys the image/sprite
         else:
             self.image = self.frames[int(self.frame_index)]
 
