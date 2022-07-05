@@ -15,7 +15,7 @@ class Sky:
             './graphics/decoration/sky/sky_middle.png').convert()
         self.horizon = horizon
 
-        # stretch
+        # stretch all of these tiles
         self.top = pygame.transform.scale(self.top, (screen_width, tile_size))
         self.bottom = pygame.transform.scale(
             self.bottom, (screen_width, tile_size))
@@ -24,8 +24,9 @@ class Sky:
 
     def draw(self, surface):
         for row in range(vertical_tile_number):
+            # x position will always be 0 so we skip it
             y = row * tile_size
-            if row < self.horizon:
+            if row < self.horizon:  # the horizon passed in is 9 from Level class init method
                 surface.blit(self.top, (0, y))
             elif row == self.horizon:
                 surface.blit(self.middle, (0, y))
@@ -35,8 +36,9 @@ class Sky:
 
 class Water:
     def __init__(self, top, level_width):
+        # stretch the water to the whole screen so it doesnt cut off too early
         water_start = -screen_width
-        water_tile_width = 192
+        water_tile_width = 192  # 192 pixels wide
         tile_x_amount = int(
             (level_width + screen_width * 2) / water_tile_width)
         self.water_sprites = pygame.sprite.Group()
@@ -62,6 +64,7 @@ class Clouds:
         self.cloud_sprites = pygame.sprite.Group()
 
         for cloud in range(cloud_number):
+            # generate random clouds in the background
             cloud = choice(cloud_surf_list)
             x = randint(min_x, max_x)
             y = randint(min_y, max_y)

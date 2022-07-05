@@ -15,7 +15,7 @@ class Level:
         self.world_shift = 0
         self.current_x = None
 
-        # player
+        # player setup
         player_layout = import_csv_layout(level_data['player'])
         self.player = pygame.sprite.GroupSingle()
         self.goal = pygame.sprite.GroupSingle()
@@ -27,6 +27,7 @@ class Level:
 
         # terrain setup
         terrain_layout = import_csv_layout(level_data['terrain'])
+        # self create tile group returns a tile group
         self.terrain_sprites = self.create_tile_group(
             terrain_layout, 'terrain')
 
@@ -62,19 +63,19 @@ class Level:
             constraint_layout, 'constraint')
 
         # decoration
-        self.sky = Sky(8)
-        level_width = len(terrain_layout[0]) * tile_size
+        self.sky = Sky(8)  # 8 is the horizon line
+        level_width = len(terrain_layout[0]) * tile_size # terrain_layout[0] is the first row
         self.water = Water(screen_height - 20, level_width)
         self.clouds = Clouds(400, level_width, 30)
 
     def create_tile_group(self, layout, type):
-        sprite_group = pygame.sprite.Group()
+        sprite_group = pygame.sprite.Group()  # create a sprite group
 
-        for row_index, row in enumerate(layout):
+        for row_index, row in enumerate(layout):  # gets the index and value
             for col_index, val in enumerate(row):
-                if val != '-1':
-                    x = col_index * tile_size
-                    y = row_index * tile_size
+                if val != '-1':  # at position -1 there isn't supposed to be anything
+                    x = col_index * tile_size  # multiply by 64 to get each position at video 59:00
+                    y = row_index * tile_size  # multiply by 64 to get each position
 
                     if type == 'terrain':
                         terrain_tile_list = import_cut_graphics(
@@ -88,7 +89,7 @@ class Level:
                         tile_surface = grass_tile_list[int(val)]
                         sprite = StaticTile(tile_size, x, y, tile_surface)
 
-                    if type == 'crates':
+                    if type == 'crates':  # one crate is single graphic so no need to cut it
                         sprite = Crate(tile_size, x, y)
 
                     if type == 'coins':
@@ -126,18 +127,19 @@ class Level:
             for col_index, val in enumerate(row):
                 x = col_index * tile_size
                 y = row_index * tile_size
-                if val == '0':
+                if val == '0':  # The Player
                     sprite = Player((x, y), self.display_surface,
                                     self.create_jump_particles)
                     self.player.add(sprite)
-                if val == '1':
+                if val == '1':  # The Player Goal
                     hat_surface = pygame.image.load(
                         './graphics/character/hat.png').convert_alpha()
                     sprite = StaticTile(tile_size, x, y, hat_surface)
                     self.goal.add(sprite)
 
     def enemy_collision_reverse(self):
-        for enemy in self.enemy_sprites.sprites():
+        for enemy in self.enemy_sprites.sprites():  # check all enemy sprites
+            # if enemy collides with any of the constraints it will reverse
             if pygame.sprite.spritecollide(enemy, self.constraint_sprites, False):
                 enemy.reverse()
 
@@ -227,6 +229,7 @@ class Level:
 
     def run(self):
         # run the entire game / level
+        # the ordering of these matter, thats why we draw the background first so it shows up in the back
 
         # sky
         self.sky.draw(self.display_surface)
@@ -242,6 +245,7 @@ class Level:
 
         # enemy
         self.enemy_sprites.update(self.world_shift)
+        # not drawn in game but it still exists
         self.constraint_sprites.update(self.world_shift)
         self.enemy_collision_reverse()
         self.enemy_sprites.draw(self.display_surface)
