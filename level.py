@@ -64,7 +64,8 @@ class Level:
 
         # decoration
         self.sky = Sky(8)  # 8 is the horizon line
-        level_width = len(terrain_layout[0]) * tile_size # terrain_layout[0] is the first row
+        # terrain_layout[0] is the first row
+        level_width = len(terrain_layout[0]) * tile_size
         self.water = Water(screen_height - 20, level_width)
         self.clouds = Clouds(400, level_width, 30)
 
@@ -278,7 +279,7 @@ class Level:
         self.vertical_movement_collision()
         self.create_landing_dust()
 
-        self.scroll_x()
+        self.scroll_x()  # moves the world along with player
         self.player.draw(self.display_surface)
         self.goal.update(self.world_shift)
         self.goal.draw(self.display_surface)
