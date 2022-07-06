@@ -6,14 +6,31 @@ from enemy import Enemy
 from decoration import Sky, Water, Clouds
 from player import Player
 from particles import ParticleEffect
+from game_data import levels
+from settings import screen_width, screen_height
 
 
 class Level:
-    def __init__(self, level_data, surface):
+    def __init__(self, current_level, surface, create_overworld):
+
         # general setup
         self.display_surface = surface
         self.world_shift = 0
         self.current_x = None
+
+        # level_content = level_data['content']
+
+        # overworld connection
+        self.create_overworld = create_overworld
+        self.current_level = current_level
+        level_data = levels[self.current_level]
+        self.new_max_level = level_data['unlock']
+
+        # level display
+        # self.font = pygame.font.Font(None, 40)
+        # self.text_surf = self.font.render(level_content, True, 'White')
+        # self.text_rect = self.text_surf.get_rect(
+        #     center=(screen_width / 2, screen_height / 2))
 
         # player setup
         player_layout = import_csv_layout(level_data['player'])
@@ -68,6 +85,13 @@ class Level:
         level_width = len(terrain_layout[0]) * tile_size
         self.water = Water(screen_height - 20, level_width)
         self.clouds = Clouds(400, level_width, 30)
+
+    def input(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RETURN]:
+            self.create_overworld(self.current_level, self.new_max_level)
+        if keys[pygame.K_ESCAPE]:
+            self.create_overworld(self.current_level, 0)
 
     def create_tile_group(self, layout, type):
         sprite_group = pygame.sprite.Group()  # create a sprite group
@@ -228,6 +252,14 @@ class Level:
                 self.player.sprite.rect.midbottom - offset, 'land')
             self.dust_sprite.add(fall_dust_particle)
 
+    def check_death(self):
+        if self.player.sprite.rect.top > screen_height:
+            self.create_overworld(self.current_level, 0)
+
+    def check_win(self):
+        if pygame.sprite.spritecollide(self.player.sprite, self.goal, False):
+            self.create_overworld(self.current_level, self.new_max_level)
+
     def run(self):
         # run the entire game / level
         # the ordering of these matter, thats why we draw the background first so it shows up in the back
@@ -283,6 +315,11 @@ class Level:
         self.player.draw(self.display_surface)
         self.goal.update(self.world_shift)
         self.goal.draw(self.display_surface)
+
+        self.input()
+        # self.display_surface.blit(self.text_surf, self.text_rect)
+        self.check_death()
+        self.check_win()
 
         # water
         self.water.draw(self.display_surface, self.world_shift)

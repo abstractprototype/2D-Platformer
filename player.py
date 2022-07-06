@@ -25,7 +25,7 @@ class Player(pygame.sprite.Sprite):
         self.speed = 8
         # pushes player down 0.8 but the vertical collision pushes player back up to 0 constantly
         self.gravity = 0.8
-        self.jump_speed = -15
+        self.jump_speed = -16
         self.double_jump = 0
 
         # player status
