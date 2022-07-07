@@ -1,9 +1,10 @@
 import pygame
 from support import import_folder
+from math import sin
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, surface, create_jump_particles):
+    def __init__(self, pos, surface, create_jump_particles, change_health):
         super().__init__()
         self.import_character_assets()
         self.frame_index = 0
@@ -37,6 +38,12 @@ class Player(pygame.sprite.Sprite):
         self.on_left = False
         self.on_right = False
 
+        # health management
+        self.change_health = change_health
+        self.invincible = False
+        self.invincibility_duration = 500  # invincible for 500 milliseconds
+        self.hurt_time = 0  # timer for when the player collided with enemy
+
     # gets the file path to the folder containing all the png frames of one action
     def import_character_assets(self):
         character_path = './graphics/character/'
@@ -58,6 +65,7 @@ class Player(pygame.sprite.Sprite):
         if self.frame_index >= len(animation):
             self.frame_index = 0
 
+        # drawing the player if hes facing right or left
         image = animation[int(self.frame_index)]
         if self.facing_right:
             self.image = image  # if facing right then default right image
@@ -66,7 +74,13 @@ class Player(pygame.sprite.Sprite):
                 image, True, False)  # flip the image to the left
             self.image = flipped_image
 
-        # set the rectangle for collisions for every direction
+        if self.invincible:  # sets transparency of player if hurt
+            alpha = self.wave_value()
+            self.image.set_alpha(alpha)
+        else:  # if not hurt then set full transparency
+            self.image.set_alpha(255)
+
+            # set the rectangle for collisions for every direction
         if self.on_ground and self.on_right:  # if player is touching ground AND touching something on the right side
             # set bottomright of player to bottomright
             self.rect = self.image.get_rect(bottomright=self.rect.bottomright)
@@ -134,8 +148,29 @@ class Player(pygame.sprite.Sprite):
     def jump(self):
         self.direction.y = self.jump_speed
 
+    def get_damage(self):
+        if not self.invincible:
+            self.change_health(-10)
+            self.invincible = True
+            self.hurt_time = pygame.time.get_ticks()
+
+    def invincibility_timer(self):  # more info on video at 59:51
+        if self.invincible:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.hurt_time >= self.invincibility_duration:  # timer to turn off invicibility
+                self.invincible = False
+
+    def wave_value(self):  # called wave value because not exactly a sin value
+        # value returns between 1 and -1, but we need 255 and 0 for transparency
+        value = sin(pygame.time.get_ticks())
+        if value >= 0:
+            return 255  # full image
+        else:
+            return 0  # invisible image
+
     def update(self):
         self.get_input()
         self.get_status()
         self.animate()
         self.run_dust_animation()
+        self.invincibility_timer()
