@@ -10,7 +10,7 @@ class Game:
     def __init__(self):
 
         # game attributes
-        self.max_level = 0
+        self.max_level = 3  # the unlocked levels
         self.max_health = 100
         self.curr_health = 100
         self.coins = 0
@@ -42,6 +42,15 @@ class Game:
     def change_health(self, amount):  # pass into create_level
         self.curr_health += amount
 
+    def check_game_over(self):
+        if self.curr_health <= 0:
+            self.curr_health = 100
+            self.coins = 0
+            self.max_level = 0  # resets all of players levels
+            self.overworld = Overworld(  # creates new instance of overworld
+                0, self.max_level, screen, self.create_level)
+            self.status = 'overworld'
+
     def run(self):
         if self.status == 'overworld':
             self.overworld.run()
@@ -50,6 +59,7 @@ class Game:
             # initalize how much hp the player has
             self.ui.show_health(self.curr_health, self.max_health)
             self.ui.show_coins(self.coins)
+            self.check_game_over()
 
 
 pygame.init()
