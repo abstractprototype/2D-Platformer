@@ -11,6 +11,7 @@ class Player(pygame.sprite.Sprite):
         self.animation_speed = 0.10
         # start with the idle animation folder and start at frame 0
         self.image = self.animations['idle'][self.frame_index]
+        # this rectangle will be the sword and follows the self.collision_rect rectangle
         self.rect = self.image.get_rect(topleft=pos)
 
         # dust particles
@@ -28,6 +29,9 @@ class Player(pygame.sprite.Sprite):
         self.gravity = 0.8
         self.jump_speed = -16
         self.double_jump = 0
+        # create a new rectangle to seperate the sword from the player # make a rectangle starting from top left for the player from self.rect
+        self.collision_rect = pygame.Rect(
+            self.rect.topleft, (50, self.rect.height))  # dont include the sword in collision with environment only enemies # 50 width because of measured size on pirate in photoshop(so a different sprite will have to change this number)
 
         # player status
         self.status = 'idle'
@@ -43,6 +47,11 @@ class Player(pygame.sprite.Sprite):
         self.invincible = False
         self.invincibility_duration = 500  # invincible for 500 milliseconds
         self.hurt_time = 0  # timer for when the player collided with enemy
+
+        # audio
+        self.jump_sound = pygame.mixer.Sound('./audio/effects/jump.wav')
+        self.jump_sound.set_volume(0.2)
+        self.hit_sound = pygame.mixer.Sound('./audio/effects/hit.wav')
 
     # gets the file path to the folder containing all the png frames of one action
     def import_character_assets(self):
@@ -69,10 +78,16 @@ class Player(pygame.sprite.Sprite):
         image = animation[int(self.frame_index)]
         if self.facing_right:
             self.image = image  # if facing right then default right image
+            # makes the sword rectangle follow the player rectangle
+            # attaches the sword rectangle from the bottom left
+            self.rect.bottomleft = self.collision_rect.bottomleft
         else:
             flipped_image = pygame.transform.flip(
                 image, True, False)  # flip the image to the left
             self.image = flipped_image
+            # makes the sword rectangle follow the player rectangle
+            # attaches the sword rectangle from the bottom right
+            self.rect.bottomright = self.collision_rect.bottomright
 
         if self.invincible:  # sets transparency of player if hurt
             alpha = self.wave_value()
@@ -80,22 +95,27 @@ class Player(pygame.sprite.Sprite):
         else:  # if not hurt then set full transparency
             self.image.set_alpha(255)
 
-            # set the rectangle for collisions for every direction
-        if self.on_ground and self.on_right:  # if player is touching ground AND touching something on the right side
-            # set bottomright of player to bottomright
-            self.rect = self.image.get_rect(bottomright=self.rect.bottomright)
-        elif self.on_ground and self.on_left:
-            self.rect = self.image.get_rect(bottomleft=self.rect.bottomleft)
-        elif self.on_ground:
-            self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
+        # fixes the animation where player jumps in midair
+        # problem is: pygame always tries to put self.image on topleft of self.rect
+        self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
 
-        elif self.on_ceiling and self.on_right:  # if player touching ceiling and touching something on right side
-            self.rect = self.image.get_rect(
-                topright=self.rect.topright)  # set player to topright
-        elif self.on_ceiling and self.on_left:
-            self.rect = self.image.get_rect(topleft=self.rect.topleft)
-        elif self.on_ceiling:
-            self.rect = self.image.get_rect(midtop=self.rect.midtop)
+        # commented out code because we don't need a static rectangle anymore
+        #     # set the rectangle for collisions for every direction
+        # if self.on_ground and self.on_right:  # if player is touching ground AND touching something on the right side
+        #     # set bottomright of player to bottomright
+        #     self.rect = self.image.get_rect(bottomright=self.rect.bottomright)
+        # elif self.on_ground and self.on_left:
+        #     self.rect = self.image.get_rect(bottomleft=self.rect.bottomleft)
+        # elif self.on_ground:
+        #     self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
+
+        # elif self.on_ceiling and self.on_right:  # if player touching ceiling and touching something on right side
+        #     self.rect = self.image.get_rect(
+        #         topright=self.rect.topright)  # set player to topright
+        # elif self.on_ceiling and self.on_left:
+        #     self.rect = self.image.get_rect(topleft=self.rect.topleft)
+        # elif self.on_ceiling:
+        #     self.rect = self.image.get_rect(midtop=self.rect.midtop)
 
     def run_dust_animation(self):
         if self.status == 'run' and self.on_ground:
@@ -143,13 +163,16 @@ class Player(pygame.sprite.Sprite):
 
     def apply_gravity(self):
         self.direction.y += self.gravity
-        self.rect.y += self.direction.y
+        # changed from rect to collision_rect to fix sword collision bug
+        self.collision_rect.y += self.direction.y
 
     def jump(self):
         self.direction.y = self.jump_speed
+        self.jump_sound.play()
 
     def get_damage(self):
         if not self.invincible:
+            self.hit_sound.play()
             self.change_health(-10)
             self.invincible = True
             self.hurt_time = pygame.time.get_ticks()
